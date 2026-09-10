@@ -610,11 +610,7 @@ def tutor_recap(booking_id):
     flash("Recap saved and session completed.", "success")
     return redirect(url_for("tutor_dashboard"))
 
-
 @app.get("/admin")
-@login_required("admin")
-def admin_dashboard():
-    @app.get("/admin")
 @login_required("admin")
 def admin_dashboard():
     con = db()
