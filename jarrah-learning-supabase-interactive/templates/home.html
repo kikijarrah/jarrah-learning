@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Jarrah Learning — Find your tutor{% endblock %}
+{% block body %}
+<main class="home-shell">
+  <section class="teen-hero">
+    <div class="hero-glow glow-a"></div><div class="hero-glow glow-b"></div>
+    <div class="teen-hero-copy reveal">
+      <div class="status-chip"><span></span> Built for students who want tutoring that actually fits.</div>
+      <h1>School feels easier<br>with the <em>right</em> tutor.</h1>
+      <p class="hero-sub">Get matched by subject, level, schedule and goals. Book a session, share what you're stuck on, and show up with a tutor who already knows what you need.</p>
+      <div class="hero-actions">
+        <a class="btn pill-btn dark magnetic" href="{{url_for('signup_student')}}">Find my tutor <span>→</span></a>
+        <a class="btn pill-btn glass" href="{{url_for('signup_tutor')}}">Become a tutor</a>
+      </div>
+      <div class="subject-row" aria-label="Popular subjects">
+        <span>Math</span><span>Physics</span><span>Chemistry</span><span>French</span><span>English</span><span>Business</span>
+      </div>
+    </div>
+
+    <div class="hero-playground reveal" data-tilt>
+      <div class="orbit-card oc-a"><span class="mini-icon">✦</span><div><small>MATCHED</small><b>IB Math AA HL</b></div><strong>96%</strong></div>
+      <div class="orbit-card oc-b"><span class="avatar-sm">AJ</span><div><small>YOUR TUTOR</small><b>Alex · Physics</b><span>Available Thu 6:30</span></div></div>
+      <div class="orbit-card oc-c"><small>NEXT SESSION</small><b>Functions review</b><div class="progress-line"><i></i></div><span>Prep sent ✓</span></div>
+      <div class="hero-center-card">
+        <span class="eyebrow">JARRAH LEARNING</span>
+        <h3>From “I don't get it”<br>to “wait… that's easy.”</h3>
+        <div class="mock-chat"><span>You</span><p>Can we focus on complex numbers?</p></div>
+        <div class="mock-chat tutor"><span>Tutor</span><p>Yep — I’ll prep examples before we meet.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scroll-strip" aria-hidden="true"><div>IB • AP • QUEBEC HIGH SCHOOL • CEGEP • ONE-ON-ONE • ONLINE • IN PERSON • </div></section>
+
+  <section class="home-section reveal" id="how">
+    <div class="section-kicker">HOW IT WORKS</div>
+    <div class="section-heading-row"><h2>Less searching.<br>More learning.</h2><p>Jarrah Learning keeps the whole tutoring process organized so you can spend less time coordinating and more time actually improving.</p></div>
+    <div class="interactive-steps">
+      <article class="step-card"><div class="step-num">01</div><div class="step-emoji">🎯</div><h3>Tell us what you need</h3><p>Add your course, goals, preferences and what you're struggling with.</p></article>
+      <article class="step-card"><div class="step-num">02</div><div class="step-emoji">✨</div><h3>Meet your matches</h3><p>See approved tutors who fit your subject, level, format and schedule.</p></article>
+      <article class="step-card"><div class="step-num">03</div><div class="step-emoji">📅</div><h3>Book in seconds</h3><p>Pick a live time slot and send your tutor the exact topics you want to cover.</p></article>
+      <article class="step-card"><div class="step-num">04</div><div class="step-emoji">↗</div><h3>Keep the momentum</h3><p>After the session, keep your recap, homework and next steps organized in one place.</p></article>
+    </div>
+  </section>
+
+  <section class="split-feature home-section reveal">
+    <div class="feature-copy"><span class="section-kicker">MADE FOR REAL STUDENT LIFE</span><h2>Your tutor should already know the problem before the call starts.</h2><p>Upload a worksheet, describe your weaknesses, add an upcoming test, and let your tutor prepare before you meet.</p><a href="{{url_for('signup_student')}}" class="text-link">Create a student profile →</a></div>
+    <div class="prep-demo" data-tilt>
+      <div class="demo-top"><span>Session prep</span><span class="live-pill">READY</span></div>
+      <label>Topic</label><div class="fake-input">Complex numbers + De Moivre's theorem</div>
+      <div class="demo-grid"><div><label>Strength</label><div class="fake-input">Algebra</div></div><div><label>Weakness</label><div class="fake-input">Arguments</div></div></div>
+      <div class="upload-demo">＋ <span>Worksheet uploaded</span><b>✓</b></div>
+    </div>
+  </section>
+
+  <section class="final-cta reveal">
+    <p>YOU DON'T NEED MORE RANDOM YOUTUBE VIDEOS.</p>
+    <h2>You need someone who gets<br>where you're stuck.</h2>
+    <a class="btn pill-btn light-on-dark magnetic" href="{{url_for('signup_student')}}">Find my tutor <span>→</span></a>
+  </section>
+</main>
+{% endblock %}
