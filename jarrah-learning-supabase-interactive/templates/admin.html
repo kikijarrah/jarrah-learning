@@ -1,1 +1,229 @@
-{% extends 'base.html' %}{% block body %}<div class='portal-content standalone'><div class='portal-header'><div><p class='eyebrow'>ADMIN</p><h2>Operations dashboard.</h2></div></div><div class='stats'><article><span>Students</span><b>{{students}}</b></article><article><span>Tutors</span><b>{{tutors}}</b></article><article><span>Sessions</span><b>{{bookings|length}}</b><small>recent bookings shown below</small></article></div><div class='section-line'><div><p class='eyebrow'>TUTOR APPROVALS</p><h2>Pending applications</h2></div></div>{% for t in pending %}<article class='match-card'><div class='photo'>{{t['name'][:2]|upper}}</div><div class='grow'><h3>{{t['name']}}</h3><p>{{t['subjects']}} · {{t['highest_level']}} · {{t['format']}}</p><p class='muted'>{{t['qualifications']}}</p></div><form method='post' action='{{url_for("approve_tutor",tutor_id=t["id"])}}'><button class='btn dark'>Approve</button></form></article>{% else %}<p class='muted'>No pending applications.</p>{% endfor %}<div class='section-line'><div><p class='eyebrow'>ALL SESSIONS</p><h2>Bookings & status</h2></div></div><div class='table'><div class='row head'><span>Student</span><span>Tutor</span><span>When</span><span>Status</span></div>{% for b in bookings %}<div class='row'><span>{{b['student_name']}}</span><span>{{b['tutor_name']}}</span><span>{{b['start_at']|pretty_dt}}</span><span>{{b['status']}}</span></div>{% endfor %}</div></div>{% endblock %}
+{% extends 'base.html' %}
+{% block body %}
+
+<div class='portal-content standalone'>
+
+    <div class='portal-header'>
+        <div>
+            <p class='eyebrow'>ADMIN</p>
+            <h2>Operations dashboard.</h2>
+        </div>
+    </div>
+
+    <div class='stats'>
+        <article>
+            <span>Students</span>
+            <b>{{ students }}</b>
+        </article>
+
+        <article>
+            <span>Tutors</span>
+            <b>{{ tutors }}</b>
+        </article>
+
+        <article>
+            <span>Sessions</span>
+            <b>{{ bookings|length }}</b>
+            <small>recent bookings shown below</small>
+        </article>
+    </div>
+
+
+    <!-- REGISTERED STUDENTS -->
+
+    <div class='section-line'>
+        <div>
+            <p class='eyebrow'>ACCOUNTS</p>
+            <h2>Registered students</h2>
+        </div>
+    </div>
+
+    {% for s in student_accounts %}
+
+    <article class='match-card'>
+
+        <div class='photo'>
+            {{ s['name'][:2]|upper }}
+        </div>
+
+        <div class='grow'>
+            <h3>{{ s['name'] }}</h3>
+            <p class='muted'>{{ s['email'] }}</p>
+        </div>
+
+        <form
+            method='post'
+            action='{{ url_for("delete_user", user_id=s["id"]) }}'
+            onsubmit='return confirm("Remove this student account? They will need to create a new account to use Jarrah Learning again.")'
+        >
+            <button
+                type='submit'
+                title='Remove student'
+                style='
+                    border:none;
+                    background:#f3f3f3;
+                    width:38px;
+                    height:38px;
+                    border-radius:50%;
+                    font-size:20px;
+                    cursor:pointer;
+                '
+            >
+                ×
+            </button>
+        </form>
+
+    </article>
+
+    {% else %}
+
+    <p class='muted'>No students registered yet.</p>
+
+    {% endfor %}
+
+
+    <!-- REGISTERED TUTORS -->
+
+    <div class='section-line'>
+        <div>
+            <p class='eyebrow'>ACCOUNTS</p>
+            <h2>Registered tutors</h2>
+        </div>
+    </div>
+
+    {% for t in tutor_accounts %}
+
+    <article class='match-card'>
+
+        <div class='photo'>
+            {{ t['name'][:2]|upper }}
+        </div>
+
+        <div class='grow'>
+            <h3>{{ t['name'] }}</h3>
+
+            <p class='muted'>
+                {{ t['email'] }}
+                ·
+                {% if t['approved'] %}
+                    Approved
+                {% else %}
+                    Pending approval
+                {% endif %}
+            </p>
+        </div>
+
+        <form
+            method='post'
+            action='{{ url_for("delete_user", user_id=t["id"]) }}'
+            onsubmit='return confirm("Remove this tutor account? They will need to create a new account to use Jarrah Learning again.")'
+        >
+            <button
+                type='submit'
+                title='Remove tutor'
+                style='
+                    border:none;
+                    background:#f3f3f3;
+                    width:38px;
+                    height:38px;
+                    border-radius:50%;
+                    font-size:20px;
+                    cursor:pointer;
+                '
+            >
+                ×
+            </button>
+        </form>
+
+    </article>
+
+    {% else %}
+
+    <p class='muted'>No tutors registered yet.</p>
+
+    {% endfor %}
+
+
+    <!-- TUTOR APPROVALS -->
+
+    <div class='section-line'>
+        <div>
+            <p class='eyebrow'>TUTOR APPROVALS</p>
+            <h2>Pending applications</h2>
+        </div>
+    </div>
+
+    {% for t in pending %}
+
+    <article class='match-card'>
+
+        <div class='photo'>
+            {{ t['name'][:2]|upper }}
+        </div>
+
+        <div class='grow'>
+            <h3>{{ t['name'] }}</h3>
+
+            <p>
+                {{ t['subjects'] }}
+                · {{ t['highest_level'] }}
+                · {{ t['format'] }}
+            </p>
+
+            <p class='muted'>
+                {{ t['qualifications'] }}
+            </p>
+        </div>
+
+        <form
+            method='post'
+            action='{{ url_for("approve_tutor", tutor_id=t["id"]) }}'
+        >
+            <button class='btn dark'>
+                Approve
+            </button>
+        </form>
+
+    </article>
+
+    {% else %}
+
+    <p class='muted'>No pending applications.</p>
+
+    {% endfor %}
+
+
+    <!-- BOOKINGS -->
+
+    <div class='section-line'>
+        <div>
+            <p class='eyebrow'>ALL SESSIONS</p>
+            <h2>Bookings & status</h2>
+        </div>
+    </div>
+
+    <div class='table'>
+
+        <div class='row head'>
+            <span>Student</span>
+            <span>Tutor</span>
+            <span>When</span>
+            <span>Status</span>
+        </div>
+
+        {% for b in bookings %}
+
+        <div class='row'>
+            <span>{{ b['student_name'] }}</span>
+            <span>{{ b['tutor_name'] }}</span>
+            <span>{{ b['start_at']|pretty_dt }}</span>
+            <span>{{ b['status'] }}</span>
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}
