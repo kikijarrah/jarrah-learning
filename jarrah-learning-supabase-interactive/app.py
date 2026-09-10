@@ -614,26 +614,105 @@ def tutor_recap(booking_id):
 @app.get("/admin")
 @login_required("admin")
 def admin_dashboard():
+    @app.get("/admin")
+@login_required("admin")
+def admin_dashboard():
     con = db()
-    students = con.execute("SELECT COUNT(*) n FROM users WHERE role='student'").fetchone()["n"]
-    tutors = con.execute("SELECT COUNT(*) n FROM users WHERE role='tutor'").fetchone()["n"]
+
+    student_accounts = con.execute(
+        "SELECT id, name, email, created_at FROM users "
+        "WHERE role='student' ORDER BY name"
+    ).fetchall()
+
+    tutor_accounts = con.execute(
+        "SELECT u.id, u.name, u.email, u.created_at, p.approved "
+        "FROM users u JOIN tutor_profiles p ON p.user_id=u.id "
+        "WHERE u.role='tutor' ORDER BY u.name"
+    ).fetchall()
+
+    students = len(student_accounts)
+    tutors = len(tutor_accounts)
+
     pending = con.execute(
-        "SELECT u.id,u.name,u.email,p.* FROM users u JOIN tutor_profiles p ON p.user_id=u.id WHERE p.approved=?", (False,)
+        "SELECT u.id,u.name,u.email,p.* FROM users u "
+        "JOIN tutor_profiles p ON p.user_id=u.id WHERE p.approved=?",
+        (False,),
     ).fetchall()
+
     bookings = con.execute(
-        "SELECT b.*,s.name student_name,t.name tutor_name FROM bookings b JOIN users s ON s.id=b.student_id "
-        "JOIN users t ON t.id=b.tutor_id ORDER BY b.start_at DESC LIMIT 100"
+        "SELECT b.*,s.name student_name,t.name tutor_name "
+        "FROM bookings b "
+        "JOIN users s ON s.id=b.student_id "
+        "JOIN users t ON t.id=b.tutor_id "
+        "ORDER BY b.start_at DESC LIMIT 100"
     ).fetchall()
+
     con.close()
-    return render_template("admin.html", students=students, tutors=tutors, pending=pending, bookings=bookings,
-                           db_backend="Supabase" if USE_POSTGRES else "Local")
+
+    return render_template(
+        "admin.html",
+        students=students,
+        tutors=tutors,
+        student_accounts=student_accounts,
+        tutor_accounts=tutor_accounts,
+        pending=pending,
+        bookings=bookings,
+        db_backend="Supabase" if USE_POSTGRES else "Local",
+    )
 
 
 @app.post("/admin/tutor/<int:tutor_id>/approve")
 @login_required("admin")
 def approve_tutor(tutor_id):
-    con = db(); con.execute("UPDATE tutor_profiles SET approved=? WHERE user_id=?", (True, tutor_id)); con.commit(); con.close()
-    flash("Tutor approved.", "success")
+    @app.post("/admin/user/<int:user_id>/delete")
+@login_required("admin")
+def delete_user(user_id):
+    con = db()
+
+    user = con.execute(
+        "SELECT * FROM users WHERE id=?",
+        (user_id,),
+    ).fetchone()
+
+    if not user or user["role"] == "admin":
+        con.close()
+        abort(403)
+
+    try:
+        # Re-open tutor availability connected to this user's bookings.
+        booked_slots = con.execute(
+            "SELECT availability_id FROM bookings "
+            "WHERE (student_id=? OR tutor_id=?) AND availability_id IS NOT NULL",
+            (user_id, user_id),
+        ).fetchall()
+
+        for slot in booked_slots:
+            con.execute(
+                "UPDATE availability SET booked=? WHERE id=?",
+                (False, slot["availability_id"]),
+            )
+
+        # Remove bookings first so database relationships do not block deletion.
+        con.execute(
+            "DELETE FROM bookings WHERE student_id=? OR tutor_id=?",
+            (user_id, user_id),
+        )
+
+        # Delete the account. Related profile/availability/assessment records
+        # are removed through their database relationships.
+        con.execute("DELETE FROM users WHERE id=?", (user_id,))
+
+        con.commit()
+        flash(f'{user["name"]} has been removed.', "success")
+
+    except Exception:
+        con.rollback()
+        app.logger.exception("Account deletion failed")
+        flash("The account could not be removed.", "error")
+
+    finally:
+        con.close()
+
     return redirect(url_for("admin_dashboard"))
 
 
