@@ -660,7 +660,19 @@ def admin_dashboard():
 @app.post("/admin/tutor/<int:tutor_id>/approve")
 @login_required("admin")
 def approve_tutor(tutor_id):
-    @app.post("/admin/user/<int:user_id>/delete")
+    con = db()
+    con.execute(
+        "UPDATE tutor_profiles SET approved=? WHERE user_id=?",
+        (True, tutor_id),
+    )
+    con.commit()
+    con.close()
+
+    flash("Tutor approved.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.post("/admin/user/<int:user_id>/delete")
 @login_required("admin")
 def delete_user(user_id):
     con = db()
@@ -675,10 +687,11 @@ def delete_user(user_id):
         abort(403)
 
     try:
-        # Re-open tutor availability connected to this user's bookings.
+        # Re-open any booked availability slots connected to this user.
         booked_slots = con.execute(
             "SELECT availability_id FROM bookings "
-            "WHERE (student_id=? OR tutor_id=?) AND availability_id IS NOT NULL",
+            "WHERE (student_id=? OR tutor_id=?) "
+            "AND availability_id IS NOT NULL",
             (user_id, user_id),
         ).fetchall()
 
@@ -688,15 +701,56 @@ def delete_user(user_id):
                 (False, slot["availability_id"]),
             )
 
-        # Remove bookings first so database relationships do not block deletion.
+        # Remove files connected to the user's bookings.
+        con.execute(
+            "DELETE FROM booking_files "
+            "WHERE booking_id IN ("
+            "SELECT id FROM bookings WHERE student_id=? OR tutor_id=?"
+            ") OR uploader_id=?",
+            (user_id, user_id, user_id),
+        )
+
+        # Remove tutor recaps connected to the user or their bookings.
+        con.execute(
+            "DELETE FROM recaps "
+            "WHERE booking_id IN ("
+            "SELECT id FROM bookings WHERE student_id=? OR tutor_id=?"
+            ") OR tutor_id=?",
+            (user_id, user_id, user_id),
+        )
+
+        # Remove bookings.
         con.execute(
             "DELETE FROM bookings WHERE student_id=? OR tutor_id=?",
             (user_id, user_id),
         )
 
-        # Delete the account. Related profile/availability/assessment records
-        # are removed through their database relationships.
-        con.execute("DELETE FROM users WHERE id=?", (user_id,))
+        # Remove profile information.
+        con.execute(
+            "DELETE FROM assessments WHERE student_id=?",
+            (user_id,),
+        )
+
+        con.execute(
+            "DELETE FROM availability WHERE tutor_id=?",
+            (user_id,),
+        )
+
+        con.execute(
+            "DELETE FROM student_profiles WHERE user_id=?",
+            (user_id,),
+        )
+
+        con.execute(
+            "DELETE FROM tutor_profiles WHERE user_id=?",
+            (user_id,),
+        )
+
+        # Finally remove the login account itself.
+        con.execute(
+            "DELETE FROM users WHERE id=?",
+            (user_id,),
+        )
 
         con.commit()
         flash(f'{user["name"]} has been removed.', "success")
@@ -710,8 +764,6 @@ def delete_user(user_id):
         con.close()
 
     return redirect(url_for("admin_dashboard"))
-
-
 @app.get("/files/<int:booking_id>/<int:file_id>")
 @login_required()
 def get_file(booking_id, file_id):
